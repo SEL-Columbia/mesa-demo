@@ -1,0 +1,82 @@
+<html>
+<head>
+    <title> MESA Demo </title>
+    <link rel="stylesheet" href="lib/leaflet/leaflet.css" />
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="lib/leaflet/leaflet.ie.css" />
+    <![endif]-->
+    <style> body { margin:0; } </style>
+    <script src="lib/jquery-1.7.2.min.js"></script>
+    <script src="lib/underscore-min.js"></script>
+    <script src="lib/leaflet/leaflet.js"></script>
+    <script src='https://api.tiles.mapbox.com/mapbox.js/v1.6.2/mapbox.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox.js/v1.6.2/mapbox.css' rel='stylesheet' />
+</head>
+<body>
+<div id="title" style="position:absolute;top:2;left:80;font-size:60;
+                        font-family:'Century Gothic';z-index:999">
+MESA Demo 
+</div>
+<div id="mesa-map" style="width: 100%; height: 100%">Loading ...</div>
+
+<script type="text/javascript" language="javascript">
+/* Bind popup to a given feature within a given layer.
+ * This will be called for every segment in the network. */
+function bindPopup(feature, layer) {
+    if (feature.properties) {
+        var defaults = { name: '', congestion_level: '', total_flow: 0};
+        layer.bindPopup(
+            _.template(
+                "<h3> <%= name %> </h3> <br/> " +
+                "<strong> Congestion Level: </strong> <br/> " +
+                "         <%= congestion_level %><br/> " +
+                "<strong> Total Flow </strong> <br/> " +
+                "         <%= total_flow %> <br/> ",
+                _.extend(defaults, feature.properties)
+            )
+        );
+    }
+}
+
+/* This function takes a feature and styles it. Currently, styling is
+ * defined by the congestion_level property only. */
+function styleStreets(feature) {
+    if(feature.properties && feature.properties.congestion_level) {
+        switch(feature.properties.congestion_level) {
+            case 'Low': return { color: '#92cf60', opacity: .9};
+            case 'Moderate': return {color: '#ffffbf', opacity: .9};
+            case 'High': return {color: '#fc8d59', opacity: .9 };
+        }
+    }
+    // congestion_level absent, or ill-defined, make it WHITE.
+    return { opacity: 0, color: '#ffffff', opacity: 1};
+}
+
+// Action 1: Initialize the map
+var mapboxTiles = L.tileLayer(
+    'https://{s}.tiles.mapbox.com/v3/modilabs.map-p543gvbh/{z}/{x}/{y}.png', {
+    attribution: 'Map Data (c)' +
+                 '<a href="http://osm.org" target="_blank">' +
+                 'OpenStreetMap Contributors</a>'
+});
+var map = new L.Map('mesa-map')
+    .setView(new L.LatLng(40.785, -73.97), 15)
+    .addLayer(mapboxTiles);
+
+// Action 2: Load the data, and render it onto the map.
+$.getJSON('config.json', {}, function(conf) {
+    $.ajax({type: conf.GET_OR_POST, url: conf.API_URL,
+        dataType: "json",
+        success: function(network) { 
+            L.geoJson(network, {
+                style: styleStreets,
+                onEachFeature: bindPopup
+            }).addTo(map);
+        }
+    });
+});
+
+</script>
+</body>
+</html>
+
