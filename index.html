@@ -64,16 +64,11 @@ var map = new L.Map('mesa-map')
     .addLayer(mapboxTiles);
 
 // Action 2: Load the data, and render it onto the map.
-$.getJSON('config.json', {}, function(conf) {
-    $.ajax({type: conf.GET_OR_POST, url: conf.API_URL,
-        dataType: "json",
-        success: function(network) { 
-            L.geoJson(network, {
-                style: styleStreets,
-                onEachFeature: bindPopup
-            }).addTo(map);
-        }
-    });
+$.getJSON('manhattan_mod.geo.json', function(network) { 
+        L.geoJson(network, {
+            style: styleStreets,
+            onEachFeature: bindPopup
+        }).addTo(map);
 });
 
 </script>
